@@ -38,6 +38,7 @@ class Product(db.Model):
 # Product Schema
 class ProductSchema(ma.Schema):
     class Meta:
+        model = Product
         fields = ('id', 'name', 'description', 'price', 'qty')
 
 
@@ -54,18 +55,30 @@ class ProductList(Resource):
         return make_response(jsonify(result))
 
     def post(self):
+        #method 1
+
         # name = request.json['name']
         # description = request.json['description']
         # price = request.json['price']
         # qty = request.json['qty']
-        data = request.json
-        new_product = Product(data.get('name'), data.get('description'), data.get('price'), data.get('qty'))
+
+        #method 2
+
+        # data = request.json
+        # new_product = Product(data.get('name'), data.get('description'), data.get('price'), data.get('qty'))
+        # db.session.add(new_product)
+        # db.session.commit()
+        # result = product_schema.dump(new_product)
+        # # print(type(result))
+        # # print(type(jsonify(result)))
+        # return make_response(jsonify(result))
+
+        #method 3
+        new_product = product_schema.load(request.json)
         db.session.add(new_product)
         db.session.commit()
-        result = product_schema.dump(new_product)
-        # print(type(result))
-        # print(type(jsonify(result)))
-        return make_response(jsonify(result))
+
+        return product_schema.dump(new_product)
 
 #class based api for retrieve,patch,delete
 class ProductView(Resource):
@@ -95,6 +108,8 @@ class ProductView(Resource):
     def patch(self,id):
         product = Product.query.get_or_404(id)
         data = request.json
+        #method 1
+
         # if data.get('name'):
         #     product.name = data.get('name')
         # if data.get('description'):
@@ -103,10 +118,18 @@ class ProductView(Resource):
         #     product.price = data.get('price')
         # if data.get('qty'):
         #     product.qty = data.get('qty')
-        for k,v in data.items():
-            setattr(product,k,v)
+
+        #method 2
+        # for k,v in data.items():
+        #     setattr(product,k,v)
+        # db.session.commit()
+        # return product_schema.dump(product)
+
+        #method 3
+        result = product_schema.load(data, instance=product)
         db.session.commit()
-        return product_schema.dump(product)
+
+        return product_schema.dump(result)
 
     def delete(self,id):
         product = Product.query.get_or_404(id)
